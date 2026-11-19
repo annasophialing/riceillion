@@ -156,18 +156,30 @@ button:disabled { opacity: .4; cursor: default; }
 #suggest b { color: var(--ink); background: var(--rice-blue); padding: 0 6px; font-weight: normal; }
 #suggest small { display: block; color: var(--muted); font-size: 17px; }
 #fb-result { font-size: 24px; margin: 14px 0 2px; }
-#fb-points { font-family: var(--pixel); font-size: 26px; margin: 10px 0 18px; color: var(--gold); text-shadow: 3px 3px 0 var(--shadow); }
+#fb-points { font-family: var(--pixel); font-size: 26px; margin: 10px 0 18px; color: var(--tier, var(--gold)); text-shadow: 3px 3px 0 var(--shadow); }
+/* rarity tier badge: colour comes from TIERS in game.js */
+#fb-tier {
+  display: inline-block; margin: 14px 0 0; padding: 4px 10px;
+  font-family: var(--pixel); font-size: 11px; letter-spacing: .08em;
+  color: var(--shadow); background: var(--tier, var(--gold));
+  box-shadow: 3px 3px 0 var(--shadow);
+}
+#feedback { border-top: 4px solid var(--tier, transparent); margin-top: 14px; }
+#feedback[data-tier="starlight"] #fb-points { animation: sparkle .5s steps(2, jump-none) infinite; }
+@keyframes sparkle { 50% { text-shadow: 3px 3px 0 var(--shadow), 0 0 14px var(--tier); } }
 
 /* ===== Results ===== */
 .rank { font-family: var(--pixel); font-size: clamp(16px, 4.5vw, 22px); color: var(--accent); margin: 4px 0 2px; line-height: 1.4; text-shadow: 3px 3px 0 var(--shadow); }
 .ranks { text-align: left; margin: 0 0 16px; border-top: 2px dashed rgba(255,255,255,.15); padding-top: 10px; }
 .ranks div { display: flex; gap: 12px; padding: 2px 0; }
 .ranks b { font-weight: normal; color: var(--gold); min-width: 74px; }
+.tiers { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin: 0 0 16px; }
+.tiers span { font-family: var(--pixel); font-size: 9px; padding: 4px 6px; color: var(--shadow); box-shadow: 2px 2px 0 var(--shadow); }
 #res-rows { text-align: left; margin: 14px 0; }
-#res-rows div { display: flex; justify-content: space-between; gap: 12px; padding: 5px 0; border-bottom: 2px dashed rgba(255,255,255,.12); }
+#res-rows div { border-left: 4px solid var(--tier, transparent); display: flex; justify-content: space-between; gap: 12px; padding: 5px 0 5px 8px; border-bottom: 2px dashed rgba(255,255,255,.12); }
 #res-rows .p { color: var(--muted); }
 #res-rows .a { text-align: right; }
-#res-rows .pts { color: var(--gold); font-family: var(--pixel); font-size: 12px; min-width: 40px; text-align: right; padding-top: 3px; }
+#res-rows .pts { color: var(--tier, var(--gold)); font-family: var(--pixel); font-size: 12px; min-width: 40px; text-align: right; padding-top: 3px; }
 
 @media (max-height: 760px) {
   #owl-wrap { top: 15%; width: 72px; margin-left: -36px; }

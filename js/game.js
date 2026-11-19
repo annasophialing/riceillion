@@ -9,6 +9,21 @@ const MAX_POINTS = 100; // per prompt
 const MAX_ALT = PROMPTS_PER_DAY * MAX_POINTS * METRES_PER_POINT; // 5000m = the moon
 const LAUNCH_DATE = new Date(2026, 10, 19); // Flight #1 (months are 0-based: 10 = November)
 
+// Rarity tiers for a single answer: [min points, name, label, colour, share emoji]
+// The colour shows on the points after each answer and on the results screen.
+const TIERS = [
+  [0, "MISS", "no lift", "#ff8a7a", "⬛"],
+  [1, "TREETOP", "common", "#7ee08a", "🌳"],
+  [16, "CLOUDS", "uncommon", "#7cc8ff", "☁️"],
+  [41, "MOONLIGHT", "rare", "#ffd25a", "🌙"],
+  [71, "STARLIGHT", "legendary", "#ff7ae0", "⭐"],
+];
+function tierFor(pts) {
+  let t = TIERS[0];
+  for (const tier of TIERS) if (pts >= tier[0]) t = tier;
+  return t;
+}
+
 // End-of-flight ranks. Same tiers as krillion (0–150, 151–250, 251–350, 351–449, 450+ out of 700),
 // scaled to our 500-point max so the tiers are just as hard to reach.
 const RANKS = [
@@ -590,6 +605,10 @@ function submitAnswer(timedOut) {
   else msg = `${match[0]} — legendary. True Rice nerd.`;
   $("fb-result").textContent = msg;
   $("fb-points").textContent = `+${pts}`;
+  const [, tierName, tierLabel, tierColor, tierEmoji] = tierFor(pts);
+  $("fb-tier").textContent = `${tierEmoji} ${tierName} · ${tierLabel}`;
+  $("feedback").style.setProperty("--tier", tierColor);
+  $("feedback").dataset.tier = tierName.toLowerCase();
   hoot(pts === 0 ? "…hoo?" : pts > 70 ? "HOOOOO!" : pts > 40 ? "hoo hoo!" : "hoo!");
 
   $("answer").disabled = true;
@@ -621,6 +640,7 @@ function renderResults(mode, score, rounds) {
   rounds.forEach((r) => {
     const d = document.createElement("div");
     d.innerHTML = `<span class="p"></span><span class="a"></span><span class="pts">${r.pts}</span>`;
+    d.style.setProperty("--tier", tierFor(r.pts)[3]);
     d.children[0].textContent = r.prompt;
     d.children[1].textContent = r.matched || (r.answer ? `“${r.answer}”` : "—");
     rows.appendChild(d);
@@ -630,7 +650,7 @@ function renderResults(mode, score, rounds) {
 }
 
 function shareText(score, rounds) {
-  const icon = (p) => (p === 0 ? "⬛" : p <= 15 ? "🌳" : p <= 40 ? "☁️" : p <= 70 ? "🌙" : "⭐");
+  const icon = (p) => tierFor(p)[4];
   const label = state.mode === "daily" ? `#${flightNumber()}` : "∞";
   return `Riceillion ${label} 🦉 ${(score * METRES_PER_POINT).toLocaleString()}m · ${rankFor(score)[1]}\n` +
     rounds.map((r) => icon(r.pts)).join("") + `\n${location.href.split("#")[0]}`;
