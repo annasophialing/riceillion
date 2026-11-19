@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Riceillion · the nightly flight</title>
+  <meta name="description" content="A daily Rice University guessing game. Rarer answers fly higher." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦉</text></svg>" />
+</head>
+<body>
+  <!-- ===== SKY (scrolls as the owl climbs) ===== -->
+  <div id="viewport">
+    <div id="sky">
+      <div id="stars"></div>
+      <div id="clouds"></div>
+      <canvas id="moon" width="24" height="24"></canvas>
+      <div id="markers"></div>
+      <canvas id="campus" aria-hidden="true"></canvas>
+    </div>
+
+    <!-- the owl stays put on screen; the sky moves under it -->
+    <div id="owl-wrap">
+      <canvas id="owl" width="16" height="16" aria-label="owl"></canvas>
+      <div id="hoot" class="hidden">hoo!</div>
+    </div>
+  </div>
+
+  <!-- ===== HUD ===== -->
+  <header id="hud">
+    <div class="stat"><span class="label">Altitude</span><span id="alt">0m</span><span id="zone">THE QUAD</span></div>
+    <div class="brand">RICEILLION</div>
+    <div class="stat right"><span class="label">Score</span><span id="score">0</span><span id="round-label"></span></div>
+  </header>
+
+  <!-- ===== START SCREEN ===== -->
+  <section id="start" class="card">
+    <h1>RICEILLION</h1>
+    <p class="sub">THE NIGHTLY FLIGHT</p>
+    <p class="tag">5 prompts · 25 seconds each · rarer answers fly higher</p>
+    <button id="btn-daily" class="primary">▲ TAKE FLIGHT ▲</button>
+    <p id="flight-no" class="muted"></p>
+    <div class="row">
+      <button id="btn-unlimited" class="ghost">UNLIMITED ∞</button>
+      <button id="btn-how" class="ghost">HOW TO PLAY</button>
+    </div>
+  </section>
+
+  <!-- ===== HOW TO PLAY ===== -->
+  <section id="how" class="card hidden">
+    <h2>HOW TO PLAY</h2>
+    <ol>
+      <li>5 Rice prompts a day. Same for every Owl.</li>
+      <li>25 seconds to name one answer.</li>
+      <li>Rare answers score big. Obvious ones barely get off the ground.</li>
+      <li>That pick you think is clever? Half of Baker thought of it too.</li>
+      <li>Each point lifts you 10 metres. 500 is the moon.</li>
+      <li>One flight per night. No second chances.</li>
+    </ol>
+    <div class="ranks">
+      <div><b>0–107</b><span>Owlet. Still in the nest.</span></div>
+      <div><b>108–178</b><span>Flocker. Flying with the flock.</span></div>
+      <div><b>179–250</b><span>Rare. Above the clouds. Nice.</span></div>
+      <div><b>251–321</b><span>Deep cut. Seriously high flight.</span></div>
+      <div><b>322+</b><span>One in a Riceillion. Moon dweller. Absurd.</span></div>
+    </div>
+    <button id="btn-how-close" class="primary">GOT IT</button>
+  </section>
+
+  <!-- ===== PLAY ===== -->
+  <section id="play" class="card hidden">
+    <div class="timer"><div id="timer-bar"></div></div>
+    <p id="prompt"></p>
+    <form id="answer-form" autocomplete="off">
+      <input id="answer" type="text" placeholder="type your answer…" maxlength="60" />
+      <button type="submit" class="primary">HOOT</button>
+    </form>
+    <p id="suggest" class="hidden"></p>
+    <div id="feedback" class="hidden">
+      <p id="fb-result"></p>
+      <p id="fb-points"></p>
+      <div id="fb-list"></div>
+      <button id="btn-next" class="primary">NEXT ▲</button>
+    </div>
+  </section>
+
+  <!-- ===== RESULTS ===== -->
+  <section id="results" class="card hidden">
+    <h2 id="res-title">FLIGHT COMPLETE</h2>
+    <p id="res-rank" class="rank"></p>
+    <p id="res-rank-line" class="muted"></p>
+    <p id="res-alt" class="big"></p>
+    <p id="res-zone" class="muted"></p>
+    <div id="res-rows"></div>
+    <div class="row">
+      <button id="btn-share" class="primary">SHARE</button>
+      <button id="btn-again" class="ghost">UNLIMITED ∞</button>
+    </div>
+    <p id="share-note" class="muted"></p>
+  </section>
+
+  <script src="js/questions.js"></script>
+  <script src="js/questions-professors.js"></script>
+  <script src="js/game.js"></script>
+</body>
+</html>
