@@ -1,4 +1,4 @@
-# 🦉 Riceillion — the nightly flight
+# 🦉 Riceillion - the nightly flight
 
 A daily Rice University guessing game. Five Rice prompts, 25 seconds each.
 The rarer your answer, the higher your owl flies. 500 points reaches the moon.
