@@ -430,13 +430,18 @@ function buildSky() {
   moveCamera(state.score * METRES_PER_POINT, true);
 }
 
-function moveCamera(alt, instant) {
+function moveCamera(alt, instant, dur = 1600) {
   const owlY = $("owl-wrap").offsetTop + $("owl-wrap").offsetHeight * 0.85;
   const t = Math.max(0, owlY - window.innerHeight + altToY(alt));
-  if (instant) sky.style.transition = "none";
+  // chunky "pixel" steps, roughly 15 per second
+  sky.style.transition = instant ? "none" : `transform ${dur}ms steps(${Math.round(dur / 66)}, end)`;
   sky.style.transform = `translateY(${t}px)`;
   if (instant) { sky.offsetHeight; sky.style.transition = ""; }
 }
+
+// How long the owl climbs: at least 3.5s for any points, up to ~7s for a 100-pointer
+const RISE_MIN_MS = 3500;
+const RISE_PER_POINT_MS = 35;
 
 function zoneFor(alt) {
   let z = ZONES[0][1];
@@ -447,10 +452,12 @@ function zoneFor(alt) {
 let hudAnim;
 function setAltitude(fromScore, toScore) {
   cancelAnimationFrame(hudAnim);
-  const start = performance.now(), dur = 1400;
+  const gain = toScore - fromScore;
+  const dur = gain > 0 ? RISE_MIN_MS + gain * RISE_PER_POINT_MS : 1400;
+  const start = performance.now();
   const step = (now) => {
     const k = Math.min(1, (now - start) / dur);
-    const e = 1 - Math.pow(1 - k, 3);
+    const e = k < 0.5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2; // ease in and out
     const s = Math.round(fromScore + (toScore - fromScore) * e);
     $("score").textContent = s;
     $("alt").textContent = (s * METRES_PER_POINT).toLocaleString() + "m";
@@ -461,10 +468,15 @@ function setAltitude(fromScore, toScore) {
   // fallback in case animation frames are paused (background tab)
   clearTimeout(setAltitude.t);
   setAltitude.t = setTimeout(() => step(start + dur), dur + 100);
-  moveCamera(toScore * METRES_PER_POINT);
-  if (toScore > fromScore) {
+  moveCamera(toScore * METRES_PER_POINT, false, dur);
+  if (gain > 0) {
+    // the owl lifts up on screen while the sky scrolls past, so even a small gain reads as a climb
+    const owl = $("owl");
+    owl.style.setProperty("--rise-ms", dur + "ms");
+    owl.classList.remove("climb"); owl.offsetHeight; owl.classList.add("climb");
     $("owl-wrap").classList.add("flying");
-    setTimeout(() => $("owl-wrap").classList.remove("flying"), dur + 200);
+    clearTimeout(setAltitude.f);
+    setAltitude.f = setTimeout(() => { $("owl-wrap").classList.remove("flying"); owl.classList.remove("climb"); }, dur + 200);
   }
 }
 
@@ -538,12 +550,23 @@ function submitAnswer(timedOut) {
         // close but not exact: ask first, let them press HOOT again
         state.pending = { key: normalize(raw), ans: found.ans };
         const s = $("suggest");
+        s.classList.remove("miss");
         s.innerHTML = `Did you mean <b></b>?<small>press HOOT again to submit it, or keep typing</small>`;
         s.querySelector("b").textContent = found.ans[0];
         show(s);
         return; // timer keeps running
       }
       if (found) match = found.ans; // exact, or a close guess when the buzzer went
+      else if (!timedOut) {
+        // not on the list: don't submit, let them try again until time runs out
+        const s = $("suggest");
+        s.classList.add("miss");
+        s.innerHTML = `Willy hasn't heard of this one.<small>try another answer</small>`;
+        hoot("…hoo?");
+        show(s);
+        $("answer").select();
+        return; // timer keeps running
+      }
     }
   }
   state.answered = true;
@@ -560,7 +583,7 @@ function submitAnswer(timedOut) {
   // feedback text
   let msg;
   if (!raw) msg = "Time's up! The owl dozed off.";
-  else if (!match) msg = `“${raw}” isn't in the nest. No lift.`;
+  else if (!match) msg = `Time's up! Willy hasn't heard of “${raw}”.`;
   else if (pts <= 15) msg = `${match[0]} — half of Baker said that too.`;
   else if (pts <= 40) msg = `${match[0]} — a respectable flap.`;
   else if (pts <= 70) msg = `${match[0]} — deep cut! Soaring.`;
@@ -568,28 +591,6 @@ function submitAnswer(timedOut) {
   $("fb-result").textContent = msg;
   $("fb-points").textContent = `+${pts}`;
   hoot(pts === 0 ? "…hoo?" : pts > 70 ? "HOOOOO!" : pts > 40 ? "hoo hoo!" : "hoo!");
-
-  // show the most common and the rarest answers
-  const sorted = q.answers.slice().sort((a, b) => a[1] - b[1]);
-  const common = sorted.slice(0, 4);
-  const rare = sorted.slice(-4).reverse().filter((a) => !common.includes(a));
-  const col = (title, list) => {
-    const c = document.createElement("div");
-    c.className = "col";
-    c.innerHTML = `<h4>${title}</h4>`;
-    list.forEach((a) => {
-      const row = document.createElement("div");
-      if (match && a === match) row.className = "you";
-      row.innerHTML = `<span></span><b>${a[1]}</b>`;
-      row.firstChild.textContent = a[0];
-      c.appendChild(row);
-    });
-    return c;
-  };
-  const list = $("fb-list");
-  list.innerHTML = "";
-  list.appendChild(col("MOST OBVIOUS", common));
-  list.appendChild(col("RAREST", rare));
 
   $("answer").disabled = true;
   hide($("answer-form"));
@@ -665,6 +666,7 @@ $("answer").addEventListener("input", () => {
     state.pending = null;
     hide($("suggest"));
   }
+  if ($("suggest").classList.contains("miss")) hide($("suggest")); // they're trying again
 });
 $("btn-next").onclick = () => {
   state.idx++;
