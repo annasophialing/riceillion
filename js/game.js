@@ -812,8 +812,6 @@ $("btn-daily").onclick = () => {
     showFlightStats(done.score);
   } else startGame("daily");
 };
-$("btn-unlimited").onclick = () => startGame("unlimited");
-$("btn-again").onclick = () => startGame("unlimited");
 $("btn-how").onclick = () => { hide($("start")); show($("how")); };
 $("btn-suggest-prompt").onclick = () => {
   hide($("start"));
