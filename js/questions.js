@@ -663,7 +663,7 @@ const QUESTIONS = [
       ["Professors|Professor|Faculty", 5],
       ["Magisters|Magister", 15],
       ["RAs|RA|Resident Associates", 20],
-      ["Servery Staff|Servery Workers|Dining Staff", 20],
+      ["Servery Staff|Servery Workers|Dining Staff|h&d", 20],
       ["Custodial Staff|Custodians|Housekeeping|Housekeepers|Janitors", 30],
       ["College Coordinators|Coordinator|College Coordinator", 40],
       ["The College Dog|College Dog|Dog", 40],
