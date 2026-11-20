@@ -794,7 +794,7 @@ function shareText(score, rounds) {
 // ---------- Wire up ----------
 function initStart() {
   $("flight-no").textContent = `FLIGHT #${flightNumber()}`;
-  if (ONLINE.enabled) { show($("btn-suggest-prompt")); show($("privacy")); }
+  if (ONLINE.enabled) { show($("btn-suggest-prompt")); show($("btn-suggest-prompt-results")); show($("privacy")); }
   const done = storage.get("riceillion-" + todayKey());
   $("btn-daily").textContent = done ? "SEE TONIGHT'S FLIGHT" : "▲ TAKE FLIGHT ▲";
 }
@@ -813,13 +813,18 @@ $("btn-daily").onclick = () => {
   } else startGame("daily");
 };
 $("btn-how").onclick = () => { hide($("start")); show($("how")); };
-$("btn-suggest-prompt").onclick = () => {
-  hide($("start"));
+// "suggest a prompt" lives on both the start and results screens; BACK returns to whichever opened it
+let suggestFrom = "start";
+function openSuggest(e) {
+  suggestFrom = e.currentTarget.dataset.from;
+  hide($(suggestFrom));
   $("sg-status").textContent = "";
   show($("suggest-card"));
   $("sg-prompt").focus();
 };
-$("btn-suggest-cancel").onclick = () => { hide($("suggest-card")); show($("start")); };
+$("btn-suggest-prompt").onclick = openSuggest;
+$("btn-suggest-prompt-results").onclick = openSuggest;
+$("btn-suggest-cancel").onclick = () => { hide($("suggest-card")); show($(suggestFrom)); };
 $("suggest-form").onsubmit = async (e) => {
   e.preventDefault();
   const prompt = $("sg-prompt").value.trim(), answers = $("sg-answers").value.trim(), note = $("sg-note").value.trim();
