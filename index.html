@@ -47,6 +47,28 @@
       <button id="btn-unlimited" class="ghost">UNLIMITED ∞</button>
       <button id="btn-how" class="ghost">HOW TO PLAY</button>
     </div>
+    <button id="btn-suggest-prompt" class="link hidden">✎ suggest a prompt</button>
+  </section>
+
+  <!-- ===== SUGGEST A PROMPT (only when online) ===== -->
+  <section id="suggest-card" class="card hidden">
+    <h2>SUGGEST A PROMPT</h2>
+    <form id="suggest-form" autocomplete="off">
+      <label>Prompt
+        <input id="sg-prompt" type="text" maxlength="200" placeholder="Name a…" required />
+      </label>
+      <label>Some answers (rarer ones too!)
+        <textarea id="sg-answers" rows="4" maxlength="600" placeholder="one per line" required></textarea>
+      </label>
+      <label>Anything else? <span class="muted">(optional)</span>
+        <input id="sg-note" type="text" maxlength="300" />
+      </label>
+      <div class="row">
+        <button type="submit" class="primary">SEND TO WILLY</button>
+        <button type="button" id="btn-suggest-cancel" class="ghost">BACK</button>
+      </div>
+      <p id="sg-status" class="muted"></p>
+    </form>
   </section>
 
   <!-- ===== HOW TO PLAY ===== -->
@@ -73,6 +95,7 @@
       <span style="background:#ffd25a">🌙 MOONLIGHT 41–70</span>
       <span style="background:#ff7ae0">⭐ STARLIGHT 71+</span>
     </div>
+    <p id="privacy" class="muted hidden">Answers are saved anonymously (no names or logins) to work out how rare they are.</p>
     <button id="btn-how-close" class="primary">GOT IT</button>
   </section>
 
@@ -89,6 +112,8 @@
       <p id="fb-tier"></p>
       <p id="fb-result"></p>
       <p id="fb-points"></p>
+      <p id="fb-crowd" class="muted hidden"></p>
+      <button id="fb-suggest" class="link hidden"></button>
       <button id="btn-next" class="primary">NEXT ▲</button>
     </div>
   </section>
@@ -100,6 +125,10 @@
     <p id="res-rank-line" class="muted"></p>
     <p id="res-alt" class="big"></p>
     <p id="res-zone" class="muted"></p>
+    <div id="res-stats" class="hidden">
+      <p id="res-percentile"></p>
+      <div id="res-chart" role="img"></div>
+    </div>
     <div id="res-rows"></div>
     <div class="row">
       <button id="btn-share" class="primary">SHARE</button>
@@ -111,6 +140,8 @@
   <footer id="credit">git commit -m "made with love by asl"</footer>
 
   <script src="js/questions.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/online.js"></script>
   <script src="js/game.js"></script>
 </body>
 </html>

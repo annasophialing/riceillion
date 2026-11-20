@@ -505,7 +505,67 @@ function hoot(text) {
 }
 
 // ---------- Game state ----------
-const state = { mode: "daily", questions: [], idx: 0, score: 0, rounds: [], timer: null, deadline: 0, answered: false };
+const state = { mode: "daily", questions: [], idx: 0, score: 0, rounds: [], timer: null, deadline: 0, answered: false, crowd: {} };
+
+// ---------- Crowd data (only when js/config.js is filled in) ----------
+const STATS_MIN_ANSWERS = 20;   // show "X% of owls said this" once a prompt has this many answers
+const CROWD_MIN_ANSWERS = 50;   // start scoring from real answers at this many
+const CROWD_FULL_ANSWERS = 300; // fully crowd-scored at this many (blended with your points in between)
+const CHART_MIN_PLAYERS = 5;    // show tonight's score chart once this many owls have flown
+
+/** Fetch how often each answer has been given for these prompts. */
+async function loadCrowd(questions) {
+  const rows = await ONLINE.promptStats(questions.map((q) => q.prompt));
+  if (!rows) return;
+  for (const q of questions) state.crowd[q.prompt] = { total: 0, counts: {} };
+  for (const r of rows) {
+    const c = state.crowd[r.prompt];
+    if (!c) continue;
+    c.total += Number(r.n);
+    if (r.answer) c.counts[r.answer] = (c.counts[r.answer] || 0) + Number(r.n);
+  }
+}
+
+/**
+ * Points for an answer. Uses your points from questions.js until a prompt has
+ * CROWD_MIN_ANSWERS answers, then blends in real rarity: the fewer players who
+ * gave an answer, the more it's worth (like krillion).
+ */
+function pointsFor(q, ans) {
+  const curated = ans[1];
+  const c = state.crowd[q.prompt];
+  if (!c || c.total < CROWD_MIN_ANSWERS) return curated;
+  const share = ((c.counts[ans[0]] || 0) + 0.5) / (c.total + 1);
+  const crowd = Math.max(1, Math.round(100 * (1 - Math.pow(share, 0.35))));
+  const w = 0.5 + 0.5 * Math.min(1, (c.total - CROWD_MIN_ANSWERS) / (CROWD_FULL_ANSWERS - CROWD_MIN_ANSWERS));
+  return Math.max(1, Math.min(100, Math.round(w * crowd + (1 - w) * curated)));
+}
+
+function logRow(q, raw, match, pts, final) {
+  ONLINE.logAnswer({
+    mode: state.mode,
+    flight: state.mode === "daily" ? flightNumber() : null,
+    prompt: q.prompt,
+    raw: raw ? raw.slice(0, 80) : null,
+    matched: match ? match[0] : null,
+    points: pts,
+    final,
+  });
+}
+
+/** A small "suggest it to Willy" button that sends the player's answer to you. */
+function suggestButton(btn, q, raw) {
+  btn.disabled = false;
+  btn.textContent = `✎ suggest “${raw}” to Willy`;
+  btn.onclick = async (e) => {
+    e.preventDefault();
+    btn.disabled = true;
+    btn.textContent = "sending…";
+    const ok = await ONLINE.suggest({ kind: "answer", prompt: q.prompt, suggestion: raw.slice(0, 600) });
+    btn.textContent = ok ? "thanks! Willy will look into it." : "couldn't send, try again later";
+    if (!state.answered) $("answer").focus();
+  };
+}
 
 function startGame(mode) {
   state.mode = mode;
@@ -515,7 +575,8 @@ function startGame(mode) {
   state.score = 0;
   state.rounds = [];
   setAltitude(prev, 0);
-  ["start", "how", "results"].forEach((id) => hide($(id)));
+  loadCrowd(state.questions); // no waiting: points are worked out when each answer is submitted
+  ["start", "how", "results", "suggest-card"].forEach((id) => hide($(id)));
   show($("play"));
   nextPrompt();
 }
@@ -577,6 +638,14 @@ function submitAnswer(timedOut) {
         const s = $("suggest");
         s.classList.add("miss");
         s.innerHTML = `Willy hasn't heard of this one.<small>try another answer</small>`;
+        if (ONLINE.enabled) {
+          const b = document.createElement("button");
+          b.type = "button";
+          b.className = "link";
+          suggestButton(b, q, raw);
+          s.appendChild(b);
+        }
+        logRow(q, raw, null, 0, false); // a guess that wasn't on the list: your "missing answers" data
         hoot("…hoo?");
         show(s);
         $("answer").select();
@@ -588,7 +657,8 @@ function submitAnswer(timedOut) {
   cancelAnimationFrame(state.timer);
   state.pending = null;
   hide($("suggest"));
-  const pts = match ? match[1] : 0;
+  const pts = match ? pointsFor(q, match) : 0;
+  logRow(q, raw, match, pts, true);
   state.rounds.push({ prompt: q.prompt, answer: raw, matched: match ? match[0] : null, pts });
 
   const prev = state.score;
@@ -609,6 +679,23 @@ function submitAnswer(timedOut) {
   $("fb-tier").textContent = `${tierEmoji} ${tierName} · ${tierLabel}`;
   $("feedback").style.setProperty("--tier", tierColor);
   $("feedback").dataset.tier = tierName.toLowerCase();
+
+  // "X% of owls said this" (counts this answer too)
+  const crowd = state.crowd[q.prompt];
+  const fbCrowd = $("fb-crowd");
+  hide(fbCrowd);
+  if (crowd) {
+    crowd.total += 1;
+    if (match) crowd.counts[match[0]] = (crowd.counts[match[0]] || 0) + 1;
+    if (match && crowd.total >= STATS_MIN_ANSWERS) {
+      const pct = (100 * crowd.counts[match[0]]) / crowd.total;
+      fbCrowd.textContent = pct < 1 ? "fewer than 1% of owls said this" : `${Math.round(pct)}% of owls said this`;
+      show(fbCrowd);
+    }
+  }
+  const fbSuggest = $("fb-suggest");
+  hide(fbSuggest);
+  if (ONLINE.enabled && raw && !match) { suggestButton(fbSuggest, q, raw); show(fbSuggest); }
   hoot(pts === 0 ? "…hoo?" : pts > 70 ? "HOOOOO!" : pts > 40 ? "hoo hoo!" : "hoo!");
 
   $("answer").disabled = true;
@@ -625,6 +712,53 @@ function finishGame() {
     storage.set("riceillion-" + todayKey(), { flight: flightNumber(), score: state.score, rounds: state.rounds });
   }
   renderResults(state.mode, state.score, state.rounds);
+  const saved = ONLINE.logFlight({
+    mode: state.mode,
+    flight: state.mode === "daily" ? flightNumber() : null,
+    score: Math.min(500, state.score),
+  });
+  if (state.mode === "daily") saved.then(() => showFlightStats(state.score));
+}
+
+/** "You flew higher than X% of owls tonight" + a chart of tonight's scores. */
+async function showFlightStats(score) {
+  const box = $("res-stats");
+  hide(box);
+  const rows = await ONLINE.flightStats(flightNumber());
+  if (!rows || !rows.length) return;
+  const players = rows.reduce((t, r) => t + Number(r.n), 0);
+  const below = rows.filter((r) => r.score < score).reduce((t, r) => t + Number(r.n), 0);
+  const owls = (n) => `${n} owl${n === 1 ? "" : "s"}`;
+  if (players < CHART_MIN_PLAYERS) {
+    $("res-percentile").textContent = `You're one of the first ${owls(players)} to fly tonight.`;
+    $("res-chart").innerHTML = "";
+    show(box);
+    return;
+  }
+  $("res-percentile").innerHTML = `You flew higher than <b>${Math.round((100 * below) / players)}%</b> of the ${owls(players)} tonight.`;
+
+  // Histogram: 10 buckets of 50 points, your bucket highlighted
+  const BUCKET = 50;
+  const counts = Array(10).fill(0);
+  rows.forEach((r) => { counts[Math.min(9, Math.floor(r.score / BUCKET))] += Number(r.n); });
+  const mine = Math.min(9, Math.floor(score / BUCKET));
+  const max = Math.max(...counts);
+  const range = (i) => `${i * BUCKET}–${i === 9 ? 500 : i * BUCKET + 49}`;
+  const chart = $("res-chart");
+  chart.innerHTML = "";
+  chart.setAttribute("aria-label", "Tonight's scores: " + counts.map((n, i) => `${range(i)}: ${owls(n)}`).join(", "));
+  const bars = document.createElement("div");
+  bars.className = "bars";
+  counts.forEach((n, i) => {
+    const col = document.createElement("div");
+    col.className = "bar" + (i === mine ? " you" : "");
+    col.dataset.tip = `${range(i)} pts · ${owls(n)}${i === mine ? " (you)" : ""}`;
+    col.innerHTML = `<i style="height:${n ? Math.max(6, (100 * n) / max) : 0}%">${i === mine ? "<em>you</em>" : ""}</i>`;
+    bars.appendChild(col);
+  });
+  chart.appendChild(bars);
+  chart.insertAdjacentHTML("beforeend", `<div class="axis"><span>0</span><span>250</span><span>500</span></div>`);
+  show(box);
 }
 
 function renderResults(mode, score, rounds) {
@@ -646,6 +780,7 @@ function renderResults(mode, score, rounds) {
     rows.appendChild(d);
   });
   $("share-note").textContent = mode === "daily" ? "Come back tomorrow night for a new flight." : "";
+  hide($("res-stats"));
   show($("results"));
 }
 
@@ -659,6 +794,7 @@ function shareText(score, rounds) {
 // ---------- Wire up ----------
 function initStart() {
   $("flight-no").textContent = `FLIGHT #${flightNumber()}`;
+  if (ONLINE.enabled) { show($("btn-suggest-prompt")); show($("privacy")); }
   const done = storage.get("riceillion-" + todayKey());
   $("btn-daily").textContent = done ? "SEE TONIGHT'S FLIGHT" : "▲ TAKE FLIGHT ▲";
 }
@@ -673,11 +809,32 @@ $("btn-daily").onclick = () => {
     setAltitude(prev, done.score);
     hide($("start"));
     renderResults("daily", done.score, done.rounds);
+    showFlightStats(done.score);
   } else startGame("daily");
 };
 $("btn-unlimited").onclick = () => startGame("unlimited");
 $("btn-again").onclick = () => startGame("unlimited");
 $("btn-how").onclick = () => { hide($("start")); show($("how")); };
+$("btn-suggest-prompt").onclick = () => {
+  hide($("start"));
+  $("sg-status").textContent = "";
+  show($("suggest-card"));
+  $("sg-prompt").focus();
+};
+$("btn-suggest-cancel").onclick = () => { hide($("suggest-card")); show($("start")); };
+$("suggest-form").onsubmit = async (e) => {
+  e.preventDefault();
+  const prompt = $("sg-prompt").value.trim(), answers = $("sg-answers").value.trim(), note = $("sg-note").value.trim();
+  if (!prompt || !answers) return;
+  $("sg-status").textContent = "sending…";
+  const ok = await ONLINE.suggest({ kind: "prompt", prompt, suggestion: answers, note: note || null });
+  if (ok) {
+    $("suggest-form").reset();
+    $("sg-status").textContent = "Thanks! Willy will look it over. 🦉";
+  } else {
+    $("sg-status").textContent = "Couldn't send right now, try again later.";
+  }
+};
 $("btn-how-close").onclick = () => { hide($("how")); show($("start")); };
 $("answer-form").onsubmit = (e) => { e.preventDefault(); submitAnswer(false); };
 $("answer").addEventListener("input", () => {

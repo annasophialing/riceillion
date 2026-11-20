@@ -196,3 +196,45 @@ button:disabled { opacity: .4; cursor: default; }
   #owl-wrap { width: 72px; margin-left: -36px; top: 28%; }
   .brand { display: none; }
   }
+
+/* ===== Online features: suggestions, crowd stats, score chart ===== */
+button.link {
+  display: block; margin: 8px auto 0; padding: 2px 4px;
+  background: none; border: 0; color: var(--accent);
+  font-family: var(--mono); font-size: 19px; text-decoration: underline dotted; text-underline-offset: 4px;
+}
+button.link:hover { color: var(--gold); }
+button.link:disabled { color: var(--muted); text-decoration: none; opacity: 1; }
+#suggest button.link { font-size: 18px; }
+#btn-suggest-prompt { margin-top: 14px; }
+
+#suggest-form { text-align: left; display: grid; gap: 12px; }
+#suggest-form label { display: grid; gap: 4px; font-size: 19px; }
+#suggest-form input, #suggest-form textarea {
+  width: 100%; padding: 8px 10px; border: 3px solid var(--border); border-radius: 0;
+  background: var(--card-2); color: var(--ink); font-family: var(--mono); font-size: 20px; outline: none; resize: vertical;
+}
+#suggest-form input:focus, #suggest-form textarea:focus { border-color: var(--gold); }
+#sg-status { text-align: center; margin: 0; }
+
+#fb-crowd { margin: -8px 0 14px; }
+#privacy { margin: 0 0 14px; font-size: 16px; }
+
+#res-stats { margin: 14px 0 4px; padding: 10px 0 0; border-top: 2px dashed rgba(255,255,255,.15); }
+#res-percentile { margin: 0 0 10px; }
+#res-percentile b { color: var(--gold); font-weight: normal; }
+#res-chart .bars { display: flex; align-items: flex-end; gap: 2px; height: 90px; padding-top: 18px; }
+#res-chart .bar { position: relative; flex: 1; height: 100%; display: flex; align-items: flex-end; cursor: default; }
+#res-chart .bar i { position: relative; display: block; width: 100%; background: #3f6fbf; }
+#res-chart .bar.you i { background: var(--gold); }
+#res-chart .bar:hover i { filter: brightness(1.3); }
+#res-chart .bar em {
+  position: absolute; left: 50%; bottom: 100%; transform: translateX(-50%);
+  font-style: normal; font-size: 16px; color: var(--ink);
+}
+#res-chart .bar:hover::after, #res-chart .bar:active::after {
+  content: attr(data-tip); position: absolute; bottom: calc(100% + 4px); left: 50%; transform: translateX(-50%);
+  white-space: nowrap; padding: 2px 8px; z-index: 2;
+  background: var(--ink); color: var(--rice-blue); font-size: 16px; box-shadow: 3px 3px 0 var(--shadow);
+}
+#res-chart .axis { display: flex; justify-content: space-between; color: var(--muted); font-size: 16px; border-top: 2px solid rgba(255,255,255,.25); padding-top: 2px; }
