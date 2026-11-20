@@ -300,6 +300,32 @@ const QUESTIONS = [
     ],
   },
 
+  
+  {
+    prompt: "Name a Chaus drink",
+    points: 40,
+    answers: [
+      ["Nutty bee", 10],
+      ["Milky way", 22],
+      ["Shooting Star", 30],
+      ["Cup of Ambition", 30],
+      ["Cup of glambition", 55],
+      ["Nutty worm", 75],
+      ["matcha", 5],
+      ["latte", 5],
+      ["witchy chai", 45],
+      ["good morning chai", 50],
+      ["cold brew", 5],
+      ["americano", 5],
+      ["polar bear", 60],
+      ["chai freeze|green tea freeze|chocolate freeze", 55],
+      ["chai frappe|green tea frappe|chocolate frappe", 55],
+      ["abuelita", 60],
+      ["snowball", 40],
+      ["pumpkin spice latte", 20],
+    ],
+  },
+
   // ------------------------------------------------------------ 8
   {
     prompt: "Name a Rice tradition centered around drinking",
