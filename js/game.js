@@ -27,10 +27,10 @@ function tierFor(pts) {
 // End-of-flight ranks. Same tiers as krillion (0–150, 151–250, 251–350, 351–449, 450+ out of 700),
 // scaled to our 500-point max so the tiers are just as hard to reach.
 const RANKS = [
-  [0, "Owlet", "Still in the nest. Plenty of sky left up there."],
+  [0, "Owlet", "Still in the nest. Plenty of sky left to see..."],
   [108, "Flocker", "Flying with the flock."],
-  [179, "Rare", "Above the clouds. Nice."],
-  [251, "Deep cut", "Seriously high flight."],
+  [179, "Rare", "You got above the clouds. Nice."],
+  [251, "Deep cut", "Serious airtime."],
   [322, "One in a Riceillion", "Moon dweller. Absurd."],
 ];
 function rankFor(score) {
@@ -56,7 +56,7 @@ const MARKERS = [
   [20, "above the live oaks"],
   [40, "the roofline of Lovett Hall"],
   [150, "the Medical Center towers glint below"],
-  [305, "level with the Chase Tower — tallest in Texas"],
+  [305, "level with the Chase Tower - the tallest in Texas"],
   [600, "TWILIGHT", true],
   [1000, "low clouds drift over Hermann Park"],
   [1500, "NIGHTFALL", true],
@@ -597,12 +597,12 @@ function submitAnswer(timedOut) {
 
   // feedback text
   let msg;
-  if (!raw) msg = "Time's up! The owl dozed off.";
+  if (!raw) msg = "Time's up! The owl dozed off. :(";
   else if (!match) msg = `Time's up! Willy hasn't heard of “${raw}”.`;
-  else if (pts <= 15) msg = `${match[0]} — half of Baker said that too.`;
-  else if (pts <= 40) msg = `${match[0]} — a respectable flap.`;
+  else if (pts <= 15) msg = `${match[0]} — half of Rice's business majors said that too.`;
+  else if (pts <= 40) msg = `${match[0]} — a respectable launch.`;
   else if (pts <= 70) msg = `${match[0]} — deep cut! Soaring.`;
-  else msg = `${match[0]} — legendary. True Rice nerd.`;
+  else msg = `${match[0]} — legendary. A true Rice nerd.`;
   $("fb-result").textContent = msg;
   $("fb-points").textContent = `+${pts}`;
   const [, tierName, tierLabel, tierColor, tierEmoji] = tierFor(pts);
@@ -697,7 +697,7 @@ $("btn-share").onclick = async () => {
   const text = shareText(state.score, state.rounds);
   try {
     await navigator.clipboard.writeText(text);
-    $("share-note").textContent = "Copied! Paste it in the group chat.";
+    $("share-note").textContent = "Copied!";
   } catch {
     $("share-note").textContent = text;
   }
