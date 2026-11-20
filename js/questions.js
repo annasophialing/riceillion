@@ -466,10 +466,10 @@ const QUESTIONS = [
       ["The Stacks|Stacks", 35],
       ["3rd Floor Fine Arts Library", 70],
       ["3rd Floor Carrels|4th Floor Carrels", 85], 
-      ["Kyle Morrow Room", 95]
+      ["Kyle Morrow Room", 95],
       ["Woodson Research Center|Woodson", 65],
       ["Digital Media Commons|DMC", 60],
-      ["Outside seating|Outside seats", 50]
+      ["Outside seating|Outside seats", 50],
       ["Kelley Center|Kelley Center for Government Information", 80],
       ["Circulation Desk|Front Desk", 45],
     ],
