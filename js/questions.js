@@ -274,7 +274,7 @@ const QUESTIONS = [
 
   // ------------------------------------------------------------ 7
   {
-    prompt: "Name a public (college party)",
+    prompt: "Name a public",
     points: 35,
     ignoreWords: [
       "public", "party", "jones", "duncan", "baker", "wiess", "sid rich", "sid richardson", "sid",
